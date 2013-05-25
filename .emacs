@@ -43,6 +43,16 @@
 (add-hook 'c++-mode-hook '(lambda ()
 						   (define-key c++-mode-map (kbd "TAB") 'my-c++-tab)))
 
+(defun remove-end-line-M ()
+  """
+C-q C-m generates ^M
+"""
+  (interactive)
+  (save-excursion
+	(beginning-of-buffer)
+	(replace-string "" "")))
+
+
 (custom-set-variables
   ;; custom-set-variables was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
