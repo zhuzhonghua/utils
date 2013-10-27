@@ -1,125 +1,236 @@
-#include <iostream>
-#include <SDL2/SDL.h>
+/*This source code copyrighted by Lazy Foo' Productions (2004-2013)
+and may not be redistributed without written permission.*/
 
-/**
-* Lesson 2: Don't Put Everything in Main
-*/
-//Screen attributes
+//Using SDL, SDL OpenGL, standard IO, and, strings
+#include <SDL.h>
+#include <SDL_opengl.h>
+#include <GL/gl.h>
+#include <stdio.h>
+#include <string>
+
+//Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
+//Starts up SDL, creates window, and initializes OpenGL
+bool init();
 
-/**
-* Log an SDL error with some error message to the output stream of our choice
-* @param os The output stream to write the message too
-* @param msg The error message to write, format will be msg error: SDL_GetError()
-*/
-void logSDLError(std::ostream &os, const std::string &msg){
-        os << msg << " error: " << SDL_GetError() << std::endl;
+//Initializes matrices and clear color
+bool initGL();
+
+//Input handler
+void handleKeys( unsigned char key, int x, int y );
+
+//Per frame update
+void update();
+
+//Renders quad to the screen
+void render();
+
+//Frees media and shuts down SDL
+void close();
+
+//The window we'll be rendering to
+SDL_Window* gWindow = NULL;
+
+//OpenGL context
+SDL_GLContext gContext;
+
+//Render flag
+bool gRenderQuad = true;
+
+bool init()
+{
+	//Initialization flag
+	bool success = true;
+
+	//Initialize SDL
+	if( SDL_Init( SDL_INIT_EVERYTHING ) < 0 )
+	{
+		printf( "SDL could not initialize! SDL Error: %s\n", SDL_GetError() );
+		success = false;
+	}
+	else
+	{
+		//Use OpenGL 2.1
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 2 );
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1 );
+
+		//Create window
+		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
+		if( gWindow == NULL )
+		{
+			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
+			success = false;
+		}
+		else
+		{
+			//Create context
+			gContext = SDL_GL_CreateContext( gWindow );
+			if( gContext == NULL )
+			{
+				printf( "OpenGL context could not be created! SDL Error: %s\n", SDL_GetError() );
+				success = false;
+			}
+			else
+			{
+				//Use Vsync
+				if( SDL_GL_SetSwapInterval( 1 ) < 0 )
+				{
+					printf( "Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError() );
+				}
+
+				//Initialize OpenGL
+				if( !initGL() )
+				{
+					printf( "Unable to initialize OpenGL!\n" );
+					success = false;
+				}
+			}
+		}
+	}
+
+	return success;
 }
-/**
-* Loads a BMP image into a texture on the rendering device
-* @param file The BMP image file to load
-* @param ren The renderer to load the texture onto
-* @return the loaded texture, or nullptr if something went wrong.
-*/
-SDL_Texture* loadTexture(const std::string &file, SDL_Renderer *ren){
-        SDL_Texture *texture = nullptr;
-        //Load the image
-        SDL_Surface *loadedImage = SDL_LoadBMP(file.c_str());
-        //If the loading went ok, convert to texture and return the texture
-        if (loadedImage != nullptr){
-                texture = SDL_CreateTextureFromSurface(ren, loadedImage);
-                SDL_FreeSurface(loadedImage);
-                //Make sure converting went ok too
-                if (texture == nullptr)
-                        logSDLError(std::cout, "CreateTextureFromSurface");
-        }
-        else
-                logSDLError(std::cout, "LoadBMP");
 
-        return texture;
+bool initGL()
+{
+	bool success = true;
+	GLenum error = GL_NO_ERROR;
+
+	//Initialize Projection Matrix
+	glMatrixMode( GL_PROJECTION );
+	glLoadIdentity();
+	
+	//Check for error
+	error = glGetError();
+	if( error != GL_NO_ERROR )
+	{
+		//printf( "Error initializing OpenGL! %s\n", gluErrorString( error ) );
+		printf("error gl %d\n", error);
+		success = false;
+	}
+
+	//Initialize Modelview Matrix
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
+
+	//Check for error
+	error = glGetError();
+	if( error != GL_NO_ERROR )
+	{
+		//printf( "Error initializing OpenGL! %s\n", gluErrorString( error ) );
+		printf("error %d\n", error);
+		success = false;
+	}
+	
+	//Initialize clear color
+	glClearColor( 0.f, 0.f, 0.f, 1.f );
+	
+	//Check for error
+	error = glGetError();
+	if( error != GL_NO_ERROR )
+	{
+		//printf( "Error initializing OpenGL! %s\n", gluErrorString( error ) );
+		printf("error %d\n", error);
+		success = false;
+	}
+	
+	return success;
 }
 
-/**
-* Draw an SDL_Texture to an SDL_Renderer at position x, y, preserving
-* the texture's width and height
-* @param tex The source texture we want to draw
-* @param ren The renderer we want to draw too
-* @param x The x coordinate to draw too
-* @param y The y coordinate to draw too
-*/
-void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y){
-        //Setup the destination rectangle to be at the position we want
-        SDL_Rect dst;
-        dst.x = x;
-        dst.y = y;
-        //Query the texture to get its width and height to use
-        SDL_QueryTexture(tex, NULL, NULL, &dst.w, &dst.h);
-        SDL_RenderCopy(ren, tex, NULL, &dst);
+void handleKeys( unsigned char key, int x, int y )
+{
+	//Toggle quad
+	if( key == 'q' )
+	{
+		gRenderQuad = !gRenderQuad;
+	}
 }
 
+void update()
+{
+	//No per frame update needed
+}
 
-int main(int argc, char** argv){
-        //Start up SDL and make sure it went ok
-        if (SDL_Init(SDL_INIT_EVERYTHING) != 0){
-                logSDLError(std::cout, "SDL_Init");
-                return 1;
-        }
+void render()
+{
+	//Clear color buffer
+	glClear( GL_COLOR_BUFFER_BIT );
+	
+	//Render quad
+	if( gRenderQuad )
+	{
+		glBegin( GL_QUADS );
+			glVertex2f( -0.5f, -0.5f );
+			glVertex2f( 0.5f, -0.5f );
+			glVertex2f( 0.5f, 0.5f );
+			glVertex2f( -0.5f, 0.5f );
+		glEnd();
+	}
+}
 
-        //Setup our window and renderer
-        SDL_Window *window = SDL_CreateWindow("Lesson 2", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-        if (window == nullptr){
-                logSDLError(std::cout, "CreateWindow");
-                return 2;
-        }
-        SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-        if (renderer == nullptr){
-                logSDLError(std::cout, "CreateRenderer");
-                return 3;
-        }
+void close()
+{
+	//Destroy window	
+	SDL_DestroyWindow( gWindow );
+	gWindow = NULL;
 
-        //The textures we'll be using
-        SDL_Texture *background = loadTexture("../res/Lesson2/background.bmp", renderer);
-        SDL_Texture *image = loadTexture("../res/Lesson2/image.bmp", renderer);
-        //Make sure they both loaded ok
-        if (background == nullptr || image == nullptr)
-                return 4;
+	//Quit SDL subsystems
+	SDL_Quit();
+}
 
-        //Clear the window
-        SDL_RenderClear(renderer);
+int main( int argc, char* args[] )
+{
+	//Start up SDL and create window
+	if( !init() )
+	{
+		printf( "Failed to initialize!\n" );
+	}
+	else
+	{
+		//Main loop flag
+		bool quit = false;
 
+		//Event handler
+		SDL_Event e;
+		
+		//Enable text input
+		SDL_StartTextInput();
 
-        //Get the width and height from the texture so we know how much to move x,y by
-        //to tile it correctly
-        int bW, bH;
-        SDL_QueryTexture(background, NULL, NULL, &bW, &bH);
-        //We want to tile our background so draw it 4 times
-        renderTexture(background, renderer, 0, 0);
-        renderTexture(background, renderer, bW, 0);
-        renderTexture(background, renderer, 0, bH);
-        renderTexture(background, renderer, bW, bH);
+		//While application is running
+		while( !quit )
+		{
+			//Handle events on queue
+			while( SDL_PollEvent( &e ) != 0 )
+			{
+				//User requests quit
+				if( e.type == SDL_QUIT )
+				{
+					quit = true;
+				}
+				//Handle keypress with current mouse position
+				else if( e.type == SDL_TEXTINPUT )
+				{
+					int x = 0, y = 0;
+					SDL_GetMouseState( &x, &y );
+					handleKeys( e.text.text[ 0 ], x, y );
+				}
+			}
 
-        //Draw our image in the center of the window
-        //We need the foreground image's width to properly compute the position
-        //of it's top left corner so that the image will be centered
-        int iW, iH;
-        SDL_QueryTexture(image, NULL, NULL, &iW, &iH);
-        int x = SCREEN_WIDTH / 2 - iW / 2;
-        int y = SCREEN_HEIGHT / 2 - iH / 2;
-        renderTexture(image, renderer, x, y);
+			//Render quad
+			render();
+			
+			//Update screen
+			SDL_GL_SwapWindow( gWindow );
+		}
+		
+		//Disable text input
+		SDL_StopTextInput();
+	}
 
-        //Update the screen
-        SDL_RenderPresent(renderer);
-        SDL_Delay(2000);
+	//Free resources and close SDL
+	close();
 
-        //Destroy the various items
-        SDL_DestroyTexture(background);
-        SDL_DestroyTexture(image);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-
-        SDL_Quit();
-        
-        return 0;
+	return 0;
 }
