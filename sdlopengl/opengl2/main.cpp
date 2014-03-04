@@ -154,18 +154,34 @@ void update()
 void render()
 {
 	//Clear color buffer
-	glClear( GL_COLOR_BUFFER_BIT );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+	glLoadIdentity();
 	
+	glTranslatef(-0.5f, 0.0f, -0.5f);
+	glBegin(GL_TRIANGLES);
+		glVertex3f(0.0f, 0.5f, 0.0f);
+		glVertex3f(-0.5f, -0.5f, 0.0f);
+		glVertex3f(0.5f, -0.5f, 0.0f);
+	glEnd();
+	
+	glTranslatef(1.0f, 0.0f, 0.0f);
+	glBegin(GL_QUADS);
+		glVertex3f(-0.5f, 0.5f, 0.0f);
+		glVertex3f(0.5f, 0.5f, 0.0f);
+		glVertex3f(0.5f, -0.5f, 0.0f);
+		glVertex3f(-0.5f, -0.5f, 0.0f);
+	glEnd();
 	//Render quad
-	if( gRenderQuad )
-	{
-		glBegin( GL_QUADS );
-			glVertex2f( -0.5f, -0.5f );
-			glVertex2f( 0.5f, -0.5f );
-			glVertex2f( 0.5f, 0.5f );
-			glVertex2f( -0.5f, 0.5f );
-		glEnd();
-	}
+	//if( gRenderQuad )
+	//{
+	//	glBegin( GL_QUADS );
+	//		glVertex2f( -0.5f, -0.5f );
+	//		glVertex2f( 0.5f, -0.5f );
+	//		glVertex2f( 0.5f, 0.5f );
+	//		glVertex2f( -0.5f, 0.5f );
+	//	glEnd();
+	//}
 }
 
 void close()
