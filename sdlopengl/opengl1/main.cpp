@@ -39,6 +39,7 @@ SDL_GLContext gContext;
 
 //Render flag
 bool gRenderQuad = true;
+float dist = 0.5f;
 
 bool init()
 {
@@ -149,6 +150,13 @@ void handleKeys( unsigned char key, int x, int y )
 	{
 		gRenderQuad = !gRenderQuad;
 	}
+  else if(key == '+')
+  {
+    dist = dist + 0.1f;
+  }
+  else if(key == '-'){
+    dist = dist - 0.1f;
+  }
 }
 
 void update()
@@ -165,10 +173,14 @@ void render()
 	if( gRenderQuad )
 	{
 		glBegin( GL_QUADS );
-			glVertex2f( -0.5f, -0.5f );
-			glVertex2f( 0.5f, -0.5f );
-			glVertex2f( 0.5f, 0.5f );
-			glVertex2f( -0.5f, 0.5f );
+			//glVertex2f( -0.5f, -0.5f );
+			//glVertex2f( 0.5f, -0.5f );
+			//glVertex2f( 0.5f, 0.5f );
+			//glVertex2f( -0.5f, 0.5f );
+      glVertex2f( -1*dist, -1*dist );
+			glVertex2f( dist, -1*dist );
+			glVertex2f( dist, dist );
+			glVertex2f( -1*dist, dist );
 		glEnd();
 	}
 }
