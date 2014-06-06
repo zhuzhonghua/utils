@@ -11,7 +11,9 @@ and may not be redistributed without written permission.*/
 
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
+const int width = 640;
 const int SCREEN_HEIGHT = 480;
+const int height = 480;
 
 //Starts up SDL, creates window, and initializes OpenGL
 bool init();
@@ -40,6 +42,7 @@ SDL_GLContext gContext;
 //Render flag
 bool gRenderQuad = true;
 float dist = 0.5f;
+float depth = 1.0f;
 
 bool init()
 {
@@ -105,6 +108,7 @@ bool initGL()
 	bool success = true;
 	GLenum error = GL_NO_ERROR;
 
+  //glViewport(0, 0, width, height);
 	//Initialize Projection Matrix
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
@@ -116,6 +120,8 @@ bool initGL()
 		printf( "Error initializing OpenGL! %s\n", gluErrorString( error ) );
 		success = false;
 	}
+
+  //gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
 
 	//Initialize Modelview Matrix
 	glMatrixMode( GL_MODELVIEW );
@@ -152,10 +158,10 @@ void handleKeys( unsigned char key, int x, int y )
 	}
   else if(key == '+')
   {
-    dist = dist + 0.1f;
+    depth = depth + 0.1f;
   }
   else if(key == '-'){
-    dist = dist - 0.1f;
+    depth = depth - 0.1f;
   }
 }
 
@@ -167,7 +173,7 @@ void update()
 void render()
 {
 	//Clear color buffer
-	glClear( GL_COLOR_BUFFER_BIT );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	
 	//Render quad
 	if( gRenderQuad )
@@ -177,10 +183,10 @@ void render()
 			//glVertex2f( 0.5f, -0.5f );
 			//glVertex2f( 0.5f, 0.5f );
 			//glVertex2f( -0.5f, 0.5f );
-      glVertex2f( -1*dist, -1*dist );
-			glVertex2f( dist, -1*dist );
-			glVertex2f( dist, dist );
-			glVertex2f( -1*dist, dist );
+      glVertex3f( -1*dist, -1*dist, depth );
+      glVertex3f( dist, -1*dist, depth );
+      glVertex3f( dist, dist, depth );
+      glVertex3f( -1*dist, dist, depth );
 		glEnd();
 	}
 }
