@@ -12,6 +12,8 @@ and may not be redistributed without written permission.*/
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
+const int width = 640;
+const int height = 480;
 
 //Starts up SDL, creates window, and initializes OpenGL
 bool init();
@@ -39,6 +41,7 @@ SDL_GLContext gContext;
 
 //Render flag
 bool gRenderQuad = true;
+float depth = 0.0f;
 
 bool init()
 {
@@ -99,6 +102,7 @@ bool initGL()
 	bool success = true;
 	GLenum error = GL_NO_ERROR;
 
+  glViewport(0, 0, width, height);
 	//Initialize Projection Matrix
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
@@ -111,6 +115,8 @@ bool initGL()
 		success = false;
 	}
 
+  gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
+  
 	//Initialize Modelview Matrix
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
@@ -144,6 +150,13 @@ void handleKeys( unsigned char key, int x, int y )
 	{
 		gRenderQuad = !gRenderQuad;
 	}
+  else if(key == '+')
+  {
+    depth = depth + 0.1f;
+  }
+  else if(key == '-'){
+    depth = depth - 0.1f;
+  }
 }
 
 void update()
@@ -158,19 +171,19 @@ void render()
 
 	glLoadIdentity();
 	
-	glTranslatef(-0.5f, 0.0f, -0.5f);
+	glTranslatef(-1.5f, 0.0f, -6.0f);
 	glBegin(GL_TRIANGLES);
-		glVertex3f(0.0f, 0.5f, 0.0f);
-		glVertex3f(-0.5f, -0.5f, 0.0f);
-		glVertex3f(0.5f, -0.5f, 0.0f);
+		glVertex3f(0.0f, 1.0f, depth);
+		glVertex3f(-1.0f, -1.0f, depth);
+		glVertex3f(1.0f, -1.0f, depth);
 	glEnd();
 	
-	glTranslatef(1.0f, 0.0f, 0.0f);
+	glTranslatef(3.0f, 0.0f, 0.0f);
 	glBegin(GL_QUADS);
-		glVertex3f(-0.5f, 0.5f, 0.0f);
-		glVertex3f(0.5f, 0.5f, 0.0f);
-		glVertex3f(0.5f, -0.5f, 0.0f);
-		glVertex3f(-0.5f, -0.5f, 0.0f);
+		glVertex3f(-1.0f, 1.0f, depth);
+		glVertex3f(1.0f, 1.0f, depth);
+		glVertex3f(1.0f, -1.0f, depth);
+		glVertex3f(-1.0f, -1.0f, depth);
 	glEnd();
 	//Render quad
 	//if( gRenderQuad )
