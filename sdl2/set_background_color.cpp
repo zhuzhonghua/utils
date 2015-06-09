@@ -21,8 +21,12 @@ int main(int argc, char* argv[])
         // Select the color for drawing. It is set to red here.
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 
+        SDL_Rect rect;
+        rect.x = 0;rect.y=0; rect.w=100; rect.h=100;
         // Clear the entire screen to our selected color.
-        SDL_RenderClear(renderer);
+        //SDL_RenderClear(renderer);
+        //SDL_RenderDrawRect(renderer, &rect);
+        SDL_RenderFillRect(renderer, &rect);
 
         // Up until now everything was drawn behind the scenes.
         // This will show the new, red contents of the window.
