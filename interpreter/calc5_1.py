@@ -4,6 +4,8 @@ SUB='SUB'
 MUL='MUL'
 DIV='DIV'
 EOF='EOF'
+LB='LB'
+RB='RB'
 
 class Token:
     def __init__(self, type, value):
@@ -69,11 +71,25 @@ class Interpreter:
         if self.current_char == '/':
             self.advance()
             return Token(DIV, '/')
+        if self.current_char == '(':
+            self.advance()
+            return Token(LB, '(')
+        if self.current_char == ')':
+            self.advance()
+            return Token(RB, ')')
 
     def factor(self):
         token = self.current_token
-        self.eat(INTEGER)
-        return token.value
+        if token.type == INTEGER:
+            self.eat(INTEGER)
+            return token.value
+        elif token.type == LB:
+            self.eat(LB)
+            result = self.expr()
+            self.eat(RB)
+            return result
+        else:
+            raise Exception('factor type')
 
     def term(self):
         result = self.factor()
