@@ -22,7 +22,7 @@ class Interpreter:
         self.text = text
         self.pos = 0
 
-        self.current_char = ''
+        self.current_char = text[0]
         self.current_token = None
 
     def skip_whitespace(self):
@@ -39,10 +39,13 @@ class Interpreter:
             self.current_char = None
 
     def get_next_token(self):
+        if not self.current_char:
+            return Token(EOF, '')
+
         if self.current_char.isdigit():
             next_char = self.current_char
             self.advance()
-            if self.current_char and self.current_char.isdigit():
+            while self.current_char and self.current_char.isdigit():
                 next_char += self.current_char
                 self.advance()
 
@@ -56,11 +59,8 @@ class Interpreter:
             self.advance()
             return Token(MINUS, '-')
 
-    def integer(self):
-        self.current_token = self.get_next_token()
-
     def term(self):
-        self.integer()
+        self.current_token = self.get_next_token()
         value = self.current_token.value
         self.current_token = self.get_next_token()
         return value
@@ -78,5 +78,7 @@ if __name__ == "__main__":
     while True:
         text = raw_input("calc >")
         inte = Interpreter(text)
+        #import pdb
+        #pdb.set_trace()
         result = inte.expr()
         print(result)
