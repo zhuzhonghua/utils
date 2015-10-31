@@ -1,0 +1,4 @@
+http://www.researchut.com/blog/debian-hurd-on-virtualbox
+root null
+
+VBoxManage convertdd debian-hurd-20150105.img debian-hurd-20150105.vdi --format VDI
