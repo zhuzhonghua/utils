@@ -102,7 +102,7 @@ bool initGL()
 	bool success = true;
 	GLenum error = GL_NO_ERROR;
 
-  glViewport(0, 0, width, height);
+    glViewport(0, 0, width, height);
 	//Initialize Projection Matrix
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
@@ -115,7 +115,7 @@ bool initGL()
 		success = false;
 	}
 
-  gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
+    gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
   
 	//Initialize Modelview Matrix
 	glMatrixMode( GL_MODELVIEW );
@@ -168,37 +168,31 @@ void render()
 {
 	//Clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
 	glLoadIdentity();
 	
 	glTranslatef(-1.5f, 0.0f, -6.0f);
 	glBegin(GL_TRIANGLES);
-    glColor3f(1.0f,0.0f,0.0f);
-		glVertex3f(0.0f, 1.0f, depth);
-    glColor3f(0.0f,1.0f,0.0f);
-		glVertex3f(-1.0f, -1.0f, depth);
-    glColor3f(0.0f,0.0f,1.0f);
-		glVertex3f(1.0f, -1.0f, depth);
+    {
+      //glColor3f(1.0f,0.0f,0.0f);
+      glVertex3f(0.0f, 1.0f, depth);
+      //glColor3f(0.0f,1.0f,0.0f);
+      glVertex3f(-1.0f, -1.0f, depth);
+      //glColor3f(0.0f,0.0f,1.0f);
+      glVertex3f(1.0f, -1.0f, depth);
+    }
 	glEnd();
 	
-	glTranslatef(3.0f, 0.0f, 0.0f);
-  glColor3f(0.5f,0.5f,1.0f);
+    glLoadIdentity();
+	glTranslatef(1.5f, 0.0f, -6.0f);
+    //glColor3f(0.5f,0.5f,1.0f);
 	glBegin(GL_QUADS);
-		glVertex3f(-1.0f, 1.0f, depth);
-		glVertex3f(1.0f, 1.0f, depth);
-		glVertex3f(1.0f, -1.0f, depth);
-		glVertex3f(-1.0f, -1.0f, depth);
-	glEnd();
-	//Render quad
-	//if( gRenderQuad )
-	//{
-	//	glBegin( GL_QUADS );
-	//		glVertex2f( -0.5f, -0.5f );
-	//		glVertex2f( 0.5f, -0.5f );
-	//		glVertex2f( 0.5f, 0.5f );
-	//		glVertex2f( -0.5f, 0.5f );
-	//	glEnd();
-	//}
+    {
+      glVertex3f(-1.0f, 1.0f, depth);
+      glVertex3f(1.0f, 1.0f, depth);
+      glVertex3f(1.0f, -1.0f, depth);
+      glVertex3f(-1.0f, -1.0f, depth);
+    }
+	glEnd();	
 }
 
 void close()

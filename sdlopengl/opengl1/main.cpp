@@ -108,7 +108,7 @@ bool initGL()
 	bool success = true;
 	GLenum error = GL_NO_ERROR;
 
-  //glViewport(0, 0, width, height);
+    glViewport(0, 0, width, height);
 	//Initialize Projection Matrix
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
@@ -121,7 +121,7 @@ bool initGL()
 		success = false;
 	}
 
-  //gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
+    gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
 
 	//Initialize Modelview Matrix
 	glMatrixMode( GL_MODELVIEW );
@@ -135,6 +135,7 @@ bool initGL()
 		success = false;
 	}
 	
+    glShadeModel(GL_SMOOTH);
 	//Initialize clear color
 	glClearColor( 0.f, 0.f, 0.f, 1.f );
 	
@@ -146,6 +147,11 @@ bool initGL()
 		success = false;
 	}
 	
+    glClearDepth(1.0f);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);	
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
 	return success;
 }
 
@@ -172,6 +178,7 @@ void update()
 
 void render()
 {
+  return;
 	//Clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	
