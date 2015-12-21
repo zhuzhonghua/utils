@@ -21,8 +21,6 @@ float points[lenx][leny][3];
 
 int wiggle_count = 0;
 
-GLfloat hold;
-
 bool blend;
 
 bool twinkle;
@@ -43,6 +41,32 @@ float spin;
 
 GLuint loop;
 GLuint texture[3];
+
+GLuint box;        /* Storage For The Display List */
+GLuint top;        /* Storage For The Second Display List */
+
+
+/* Array For Box Colors */
+GLfloat boxcol[5][3] =
+{
+    /* Bright: */
+    { 1.0f, 0.0f, 0.0f}, /* Red */
+    { 1.0f, 0.5f, 0.0f}, /* Orange */
+    { 1.0f, 1.0f, 0.0f}, /* Yellow */
+    { 0.0f, 1.0f, 0.0f}, /* Green */
+    { 0.0f, 1.0f, 1.0f}  /* Blue */
+};
+
+/* Array For Top Colors */
+GLfloat topcol[5][3] =
+{
+    /* Dark: */
+    { 0.5f, 0.0f,  0.0f}, /* Red */
+    { 0.5f, 0.25f, 0.0f}, /* Orange */
+    { 0.5f, 0.5f,  0.0f}, /* Yellow */
+    { 0.0f, 0.5f,  0.0f}, /* Green */
+    { 0.0f, 0.5f,  0.5f}  /* Blue */
+};
 
 float xrot;
 float yrot;
@@ -89,6 +113,8 @@ SECTOR sector1;     /* Our sector */
 //Starts up SDL, creates window, and initializes OpenGL
 bool init();
 void Quit();
+
+GLvoid BuildLists();
 
 //Initializes matrices and clear color
 bool initGL();
@@ -284,6 +310,11 @@ bool initGL()
     return false;
   }
 
+  BuildLists();
+  glEnable(GL_LIGHT0);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_COLOR_MATERIAL);
+
   glEnable(GL_TEXTURE_2D);
   glShadeModel(GL_SMOOTH);
   glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
@@ -292,13 +323,6 @@ bool initGL()
   //glDepthFunc(GL_LEQUAL);
 
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	//Check for error
-	error = glGetError();
-	if( error != GL_NO_ERROR )
-	{
-		printf( "Error initializing OpenGL! %s\n", gluErrorString( error ) );
-		success = false;
-	}
 
   //glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);
   //glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);
@@ -343,6 +367,12 @@ void handleKeys( unsigned char key, int x, int y )
   }
   else if(key == 'j'){
     yrot += 1.5f;
+  }
+  else if(key == 'h'){
+    xrot += 1.5f;
+  }
+  else if(key == 'g'){
+    xrot -= 1.5f;
   }
   else if(key == 'i'){
     xpos -= (float)sin(yrot*piover180)*0.05f;
@@ -411,75 +441,55 @@ void update()
 
 void render()
 {
-  float float_x,float_y,float_xb,float_yb;
+  GLfloat xtrans = -xpos;
+  GLfloat ztrans = -zpos;
+  GLfloat ytrans = -walkbias-0.25f;
+  GLfloat sceneroty = 360.0f - yrot;
 
-  //Clear color buffer
+  /* Clear The Screen And The Depth Buffer */
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-  glLoadIdentity();
 
-  glTranslatef(0.0f, 0.0f, -12.0f);
-  
-  glRotatef(xrot, 1.0f, 0.0f, 0.0f);
-  glRotatef(yrot, 0.0f, 1.0f, 0.0f);
-  glRotatef(zrot, 0.0f, 0.0f, 1.0f);
-  
-  glBindTexture(GL_TEXTURE_2D, texture[filter]);
-  
-  glBegin(GL_QUADS);
-  for(int x = 0; x<lenx-1;x++){
-    for(int y = 0; y < leny-1; ++y){
-      float fx = float(x)/(lenx-1);
-      float fy = 1.0f - float(y)/(leny-1);
-      float fxb = float(x+1)/(lenx-1);
-      float fyb = 1.0f - float(y+1)/(leny-1);
-  
-      glTexCoord2f(fx, fy);
-      glVertex3f(points[x][y][0], points[x][y][1], points[x][y][2]);
-  
-      glTexCoord2f(fx, fyb);
-      glVertex3f(points[x][y+1][0], points[x][y+1][1], points[x][y+1][2]);
-  
-      glTexCoord2f(fxb, fyb);
-      glVertex3f(points[x+1][y+1][0], points[x+1][y+1][1], points[x+1][y+1][2]);
+    /* Select Our Texture */
+  glBindTexture( GL_TEXTURE_2D, texture[0] );
 
-      glTexCoord2f(fxb, fy);
-      glVertex3f(points[x+1][y][0], points[x+1][y][1], points[x+1][y][2]);            
+  /* Reset the view */
+  glLoadIdentity( );
+  //glTranslatef(0.0f, 0.0f, -20.0f );
+  glTranslatef(0.0f, 5.0f, -20.0f );
+  glRotatef( 43.0f + xrot, 1.0f, 0.0f, 0.0f );
+  //glRotatef( 45.0f + yrot, 0.0f, 1.0f, 0.0f );
+
+  glColor3fv( boxcol[0] ); /* Select A Box Color */
+  glCallList( box );               /* Draw the box */
+		    
+  glColor3fv( topcol[0] ); /* Select The Top Color */
+  glCallList( top );               /* Draw The Top */
+  return;
+  /* Start loading in our display lists */
+  for (int yloop = 1; yloop < 2; yloop++ ){
+    for (int xloop = 0; xloop < yloop; xloop++ ){
+      /* Reset the view */
+      glLoadIdentity( );
+
+      /* Position The Cubes On The Screen */
+      glTranslatef( 1.4f + ( ( float )xloop * 2.8f ) - ( ( float )yloop * 1.4f ),
+                    ( ( 6.0f - ( float )yloop ) * 2.4f ) - 7.0f,
+                    -20.0f );
+
+      /* Tilt the cubes */
+      /* Tilt The Cubes Up And Down */
+      glRotatef( 45.0f - ( 2.0f * yloop ) + xrot,
+                 1.0f, 0.0f, 0.0f );
+      /* Spin Cubes Left And Right */
+      //glRotatef( 45.0f + yrot, 0.0f, 1.0f, 0.0f );
+
+      glColor3fv( boxcol[yloop - 1] ); /* Select A Box Color */
+      glCallList( box );               /* Draw the box */
+		    
+      glColor3fv( topcol[yloop - 1] ); /* Select The Top Color */
+      glCallList( top );               /* Draw The Top */
     }
   }
-  glEnd();
-
-  //glBegin(GL_QUADS);
-  //    glTexCoord2f(0, 1);
-  //    //glTexCoord2f(1, 1);
-  //    glVertex3f(points[0][0][0], points[0][0][1], 0);
-  //
-  //    glTexCoord2f(0, 0);
-  //    //glTexCoord2f(1, 0);
-  //    glVertex3f(points[0][44][0], points[0][44][1], 0);
-  //
-  //    glTexCoord2f(1, 0);
-  //    //glTexCoord2f(0, 0);
-  //    glVertex3f(points[44][44][0], points[44][44][1], 0);
-  //    
-  //    glTexCoord2f(1, 1);
-  //    //glTexCoord2f(0, 1);
-  //    glVertex3f(points[44][0][0], points[44][0][1], 0);
-  //glEnd();
-  if(wiggle_count == 2){
-    for(int y=0; y< 45; y++){
-      float hold = points[0][y][2];
-      for(int x=0; x<44; x++){
-        points[x][y][2] = points[x+1][y][2];
-      }
-      points[44][y][2]=hold;
-    }
-    wiggle_count=0;
-  }
-  wiggle_count++;
-  xrot+=0.3f;
-  yrot+=0.2f;
-  zrot+=0.4f;
-  
 }
 
 void Quit()
@@ -496,33 +506,75 @@ void Quit()
 	SDL_Quit();
 }
 
+
+/* function to build up our display lists */
+GLvoid BuildLists( )
+{
+  /* Build two lists */
+  box = glGenLists( 2 );
+
+  /* New compiled box display list */
+  glNewList( box, GL_COMPILE );
+  glBegin( GL_QUADS ); /* Start drawing quads */
+  /* Bottom Face */
+  glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
+  glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f, -1.0f, -1.0f );
+  glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f, -1.0f,  1.0f );
+  glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f,  1.0f );
+
+  /* Front Face */
+  glTexCoord2f( 1.0f, 0.0f ); glVertex3f( -1.0f, -1.0f,  1.0f );
+  glTexCoord2f( 0.0f, 0.0f ); glVertex3f(  1.0f, -1.0f,  1.0f );
+  glTexCoord2f( 0.0f, 1.0f ); glVertex3f(  1.0f,  1.0f,  1.0f );
+  glTexCoord2f( 1.0f, 1.0f ); glVertex3f( -1.0f,  1.0f,  1.0f );
+
+  /* Back Face */
+  glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
+  glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
+  glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f,  1.0f, -1.0f );
+  glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f, -1.0f, -1.0f );
+
+  /* Right face */
+  glTexCoord2f( 0.0f, 0.0f ); glVertex3f( 1.0f, -1.0f, -1.0f );
+  glTexCoord2f( 0.0f, 1.0f ); glVertex3f( 1.0f,  1.0f, -1.0f );
+  glTexCoord2f( 1.0f, 1.0f ); glVertex3f( 1.0f,  1.0f,  1.0f );
+  glTexCoord2f( 1.0f, 0.0f ); glVertex3f( 1.0f, -1.0f,  1.0f );
+
+  /* Left Face */
+  glTexCoord2f( 1.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
+  glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f,  1.0f );
+  glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f,  1.0f,  1.0f );
+  glTexCoord2f( 1.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
+  glEnd( );
+  glEndList( );
+
+  top = box + 1; /* Top list value is box list value plus 1 */
+
+  /* New compiled list, top */
+  glNewList( top, GL_COMPILE );
+  glBegin( GL_QUADS ); /* Start Drawing Quad */
+  /* Top Face */
+  glTexCoord2f( 1.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
+  glTexCoord2f( 1.0f, 0.0f ); glVertex3f( -1.0f,  1.0f,  1.0f );
+  glTexCoord2f( 0.0f, 0.0f ); glVertex3f(  1.0f,  1.0f,  1.0f );
+  glTexCoord2f( 0.0f, 1.0f ); glVertex3f(  1.0f,  1.0f, -1.0f );
+  glEnd( );
+  glEndList( );
+}
+
 int loadGLTextures()
 {
   int status = 0;
   SDL_Surface* TextureImage[1];
-  if((TextureImage[0] = SDL_LoadBMP("data/tim.bmp")))
+  if((TextureImage[0] = SDL_LoadBMP("data/cube.bmp")))
   {
     status = 1;
     glGenTextures(1, &texture[0]);
 
     glBindTexture(GL_TEXTURE_2D, texture[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage[0]->w,
-                 TextureImage[0]->h, 0, GL_BGR,
-                 GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glBindTexture(GL_TEXTURE_2D, texture[1]);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage[0]->w,
-                 TextureImage[0]->h, 0, GL_BGR,
-                 GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    
-    glBindTexture(GL_TEXTURE_2D, texture[2]);
     gluBuild2DMipmaps(GL_TEXTURE_2D, 3, TextureImage[0]->w,
-                 TextureImage[0]->h, GL_BGR,
-                 GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
+                      TextureImage[0]->h, GL_BGR,
+                      GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   }

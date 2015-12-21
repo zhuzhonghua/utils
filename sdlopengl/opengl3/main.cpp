@@ -176,30 +176,36 @@ void update()
 void render()
 {
 	//Clear color buffer
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	glLoadIdentity();
+  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  glLoadIdentity();
   
-	glTranslatef(-1.5f, 0.0f, -6.0f);
-  glRotatef(rtri, 0.0f, 1.0f, 0.0f);
-	glBegin(GL_TRIANGLES);
+  glTranslatef(-1.5f, 0.0f, -6.0f);
+  //glRotatef(rtri, 0.0f, 1.0f, 0.0f);
+  glBegin(GL_TRIANGLES);
+  {
     glColor3f(1.0f,0.0f,0.0f);
-		glVertex3f(0.0f, 1.0f, depth);
+    glVertex3f(0.0f, 1.0f, depth);
+
     glColor3f(0.0f,1.0f,0.0f);
-		glVertex3f(-1.0f, -1.0f, depth);
+    glVertex3f(-1.0f, -1.0f, depth);
+
     glColor3f(0.0f,0.0f,1.0f);
-		glVertex3f(1.0f, -1.0f, depth);
-	glEnd();
+    glVertex3f(1.0f, -1.0f, depth);
+  }
+  glEnd();
 
   glLoadIdentity();
-	glTranslatef(1.5f, 0.0f, -6.0f);
-  glRotatef(rquad, 1.0f, 0.0f, 0.0f);
+  glTranslatef(1.5f, 0.0f, -6.0f);
+  //glRotatef(rquad, 1.0f, 0.0f, 0.0f);
   glColor3f(0.5f,0.5f,1.0f);
-	glBegin(GL_QUADS);
-		glVertex3f(-1.0f, 1.0f, depth);
-		glVertex3f(1.0f, 1.0f, depth);
-		glVertex3f(1.0f, -1.0f, depth);
-		glVertex3f(-1.0f, -1.0f, depth);
-	glEnd();
+  glBegin(GL_QUADS);
+  {
+    glVertex3f(-1.0f, 1.0f, depth);
+    glVertex3f(1.0f, 1.0f, depth);
+    glVertex3f(1.0f, -1.0f, depth);
+    glVertex3f(-1.0f, -1.0f, depth);
+  }
+  glEnd();
 
   rtri += 0.2f;
   rquad += 0.2f;

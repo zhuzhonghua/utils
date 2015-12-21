@@ -15,12 +15,6 @@ const int SCREEN_HEIGHT = 480;
 const int width = 640;
 const int height = 480;
 
-const int lenx=45;
-const int leny=45;
-float points[lenx][leny][3];
-
-int wiggle_count = 0;
-
 bool blend;
 
 bool twinkle;
@@ -235,7 +229,7 @@ bool init()
 					printf( "Unable to initialize OpenGL!\n" );
 					success = false;
 				}
-        //SetupWorld( "data/world.txt" );
+        SetupWorld( "data/world.txt" );
         if( !resizeWindow() ){
           printf( "Unable to resizeWindow!\n" );
 					success = false;
@@ -313,18 +307,7 @@ bool initGL()
     stars[i].g = rand()%256;
     stars[i].b = rand()%256;
   }
-
-  glPolygonMode(GL_BACK, GL_FILL);
-  glPolygonMode(GL_FRONT, GL_LINE);
-
-  for(int x=0; x < lenx; x++){
-    for(int y=0; y < leny; y++){
-      points[x][y][0] = float((x/(lenx/9.0f))-4.5f);
-      points[x][y][1] = float((y/(leny/9.0f))-4.5f);
-      points[x][y][2] = float(sin((((x/(lenx/9.0f))*40.0f)/360.0f)*3.14*2.0f));
-    }
-  }
-
+  
 	return success;
 }
 
@@ -414,73 +397,45 @@ void render()
   GLfloat ytrans = -walkbias-0.25f;
   GLfloat sceneroty = 360.0f - yrot;
   
-	//Clear color buffer
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  //Clear color buffer
+  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   glLoadIdentity();
 
-  glTranslatef(0.0f, 0.0f, -12.0f);
-  
-  glRotatef(xrot, 1.0f, 0.0f, 0.0f);
-  glRotatef(yrot, 0.0f, 1.0f, 0.0f);
-  glRotatef(zrot, 0.0f, 0.0f, 1.0f);
-  
+  glRotatef(lookupdown, 1.0f, 0.0f, 0.0f);
+  glRotatef(sceneroty, 0.0f, 1.0f, 0.0f);
+
+  glTranslatef(xtrans, ytrans, ztrans);
+
   glBindTexture(GL_TEXTURE_2D, texture[filter]);
   
-  glBegin(GL_QUADS);
-  for(int x = 0; x<lenx-1;x++){
-    for(int y = 0; y < leny-1; ++y){
-      float fx = float(x)/(lenx-1);
-      float fy = 1.0-float(y)/(leny-1);
-      float fxb = float(x+1)/(lenx-1);
-      float fyb = 1.0-float(y+1)/(leny-1);
-  
-      glTexCoord2f(fx, fy);
-      glVertex3f(points[x][y][0], points[x][y][1], points[x][y][2]);
-  
-      glTexCoord2f(fx, fyb);
-      glVertex3f(points[x][y+1][0], points[x][y+1][1], points[x][y+1][2]);
-  
-      glTexCoord2f(fxb, fyb);
-      glVertex3f(points[x+1][y+1][0], points[x+1][y+1][1], points[x+1][y+1][2]);
+  for(int loop=0; loop<sector1.numTriangles; loop++){
+    glBegin(GL_TRIANGLES);
+    glNormal3f(0.0f, 0.0f, 1.0f);
+    GLfloat x_m = sector1.triangle[loop].vertex[0].x;
+    GLfloat y_m = sector1.triangle[loop].vertex[0].y;
+    GLfloat z_m = sector1.triangle[loop].vertex[0].z;
       
-      glTexCoord2f(fxb, fy);
-      glVertex3f(points[x+1][y][0], points[x+1][y][1], points[x+1][y][2]);
-    }
-  }
-  glEnd();
+    GLfloat u_m = sector1.triangle[loop].vertex[0].u;
+    GLfloat v_m = sector1.triangle[loop].vertex[0].v;
+    glTexCoord2f(u_m, v_m); glVertex3f(x_m, y_m, z_m);
 
-  //glBegin(GL_QUADS);
-  //    glTexCoord2f(0, 1);
-  //    //glTexCoord2f(1, 1);
-  //    glVertex3f(points[0][0][0], points[0][0][1], 0);
-  //
-  //    glTexCoord2f(0, 0);
-  //    //glTexCoord2f(1, 0);
-  //    glVertex3f(points[0][44][0], points[0][44][1], 0);
-  //
-  //    glTexCoord2f(1, 0);
-  //    //glTexCoord2f(0, 0);
-  //    glVertex3f(points[44][44][0], points[44][44][1], 0);
-  //    
-  //    glTexCoord2f(1, 1);
-  //    //glTexCoord2f(0, 1);
-  //    glVertex3f(points[44][0][0], points[44][0][1], 0);
-  //glEnd();
-  //if(wiggle_count == 2){
-  //  for(int y=0; y< 45; y++){
-  //    float hold = points[0][y][2];
-  //    for(int x=0; x<44; x++){
-  //      points[x][y][2] = points[x+1][y][2];
-  //    }
-  //    points[44][y][2]=hold;
-  //  }
-  //  wiggle_count=0;
-  //}
-  //wiggle_count++;
-  //xrot+=0.3f;
-  //yrot+=0.2f;
-  //zrot+=0.4f;
-  
+    x_m = sector1.triangle[loop].vertex[1].x;
+    y_m = sector1.triangle[loop].vertex[1].y;
+    z_m = sector1.triangle[loop].vertex[1].z;
+                                          
+    u_m = sector1.triangle[loop].vertex[1].u;
+    v_m = sector1.triangle[loop].vertex[1].v;
+    glTexCoord2f(u_m, v_m); glVertex3f(x_m, y_m, z_m);
+
+    x_m = sector1.triangle[loop].vertex[2].x;
+    y_m = sector1.triangle[loop].vertex[2].y;
+    z_m = sector1.triangle[loop].vertex[2].z;
+                                          
+    u_m = sector1.triangle[loop].vertex[2].u;
+    v_m = sector1.triangle[loop].vertex[2].v;
+    glTexCoord2f(u_m, v_m); glVertex3f(x_m, y_m, z_m);
+    glEnd();
+  }
 }
 
 void Quit()
@@ -501,25 +456,25 @@ int loadGLTextures()
 {
   int status = 0;
   SDL_Surface* TextureImage[1];
-  if((TextureImage[0] = SDL_LoadBMP("data/tim.bmp")))
+  if((TextureImage[0] = SDL_LoadBMP("data/mud.bmp")))
   {
     status = 1;
-    glGenTextures(1, &texture[0]);
-
+    glGenTextures(3, &texture[0]);
+    
     glBindTexture(GL_TEXTURE_2D, texture[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage[0]->w,
+                 TextureImage[0]->h, 0, GL_BGR,
+                 GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, texture[1]);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage[0]->w,
                  TextureImage[0]->h, 0, GL_BGR,
                  GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glBindTexture(GL_TEXTURE_2D, texture[1]);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage[0]->w,
-                 TextureImage[0]->h, 0, GL_BGR,
-                 GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    
     glBindTexture(GL_TEXTURE_2D, texture[2]);
     gluBuild2DMipmaps(GL_TEXTURE_2D, 3, TextureImage[0]->w,
                  TextureImage[0]->h, GL_BGR,

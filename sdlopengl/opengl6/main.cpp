@@ -19,20 +19,13 @@ float xrot;
 float yrot;
 float zrot;
 
+GLuint texture[1];
+
 float rtri;
 float rquad;
 
-GLfloat LightAmbient[] = {0.5f, 0.5f, 0.5f, 1.0f};
-
-GLfloat LightDiffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};
-
-GLfloat LightPosition[] = {0.0f, 0.0f, 2.0f, 1.0f};
-
-GLuint filter=0;
-
 //Starts up SDL, creates window, and initializes OpenGL
 bool init();
-GLuint texture[3];
 
 //Initializes matrices and clear color
 bool initGL();
@@ -60,7 +53,7 @@ SDL_GLContext gContext;
 
 //Render flag
 bool gRenderQuad = true;
-float depth = -5.0f;
+float depth = 0.0f;
 
 bool init()
 {
@@ -176,11 +169,6 @@ bool initGL()
 		printf( "Error initializing OpenGL! %s\n", gluErrorString( error ) );
 		success = false;
 	}
-
-  glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);
-  glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);
-  glLightfv(GL_LIGHT1, GL_POSITION, LightPosition);
-  glEnable(GL_LIGHT1);
   
 	return success;
 }
@@ -205,15 +193,6 @@ void handleKeys( unsigned char key, int x, int y )
   else if(key == '['){
     rtri -= 10.0f;
   }
-  else if(key == '1'){
-    filter = 0;
-  }
-  else if(key == '2'){
-    filter = 1;
-  }
-  else if(key == '3'){
-    filter = 2;
-  }
 }
 
 void update()
@@ -223,84 +202,78 @@ void update()
 
 void render()
 {
-	//Clear color buffer
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  //Clear color buffer
+  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
-	glLoadIdentity();
-	glTranslatef(0.0f, 0.0f,depth);
+  glLoadIdentity();
+  glTranslatef(0.0f, 0.0f,-5.0f);
   
   glRotatef(xrot, 1.0f, 0.0f, 0.0f);
   glRotatef(yrot, 0.0f, 1.0f, 0.0f);
-  //glRotatef(zrot, 0.0f, 0.0f, 1.0f);
+  glRotatef(zrot, 0.0f, 0.0f, 1.0f);
 
-  glBindTexture(GL_TEXTURE_2D, texture[filter]);
+  glBindTexture(GL_TEXTURE_2D, texture[0]);
   
-	glBegin(GL_QUADS);
-    glNormal3f(0.0f, 0.0f, 1.0f);
-    /* Bottom Left Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f, -1.0f, 1.0f );
-    /* Bottom Right Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f, -1.0f, 1.0f );
-    /* Top Right Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f,  1.0f, 1.0f );
-    /* Top Left Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f,  1.0f, 1.0f );
+  glBegin(GL_QUADS);
+  /* Bottom Left Of The Texture and Quad */
+  glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f, -1.0f, 1.0f );
+  /* Bottom Right Of The Texture and Quad */
+  glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f, -1.0f, 1.0f );
+  /* Top Right Of The Texture and Quad */
+  glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f,  1.0f, 1.0f );
+  /* Top Left Of The Texture and Quad */
+  glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f,  1.0f, 1.0f );
 
-    glNormal3f(0.0f, 0.0f, -1.0f);
-    /* Back Face */
-    /* Bottom Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
-    /* Top Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
-    /* Top Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f,  1.0f, -1.0f );
-    /* Bottom Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f, -1.0f, -1.0f );
+  /* Back Face */
+  /* Bottom Right Of The Texture and Quad */
+  glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
+  /* Top Right Of The Texture and Quad */
+  glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
+  /* Top Left Of The Texture and Quad */
+  glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f,  1.0f, -1.0f );
+  /* Bottom Left Of The Texture and Quad */
+  glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f, -1.0f, -1.0f );
 
-    glNormal3f(0.0f, 1.0f, 0.0f);
-    /* Top Face */
-    /* Top Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
-    /* Bottom Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 0.0f ); glVertex3f( -1.0f,  1.0f,  1.0f );
-    /* Bottom Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 0.0f ); glVertex3f(  1.0f,  1.0f,  1.0f );
-    /* Top Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 1.0f ); glVertex3f(  1.0f,  1.0f, -1.0f );
+  /* Top Face */
+  /* Top Left Of The Texture and Quad */
+  glTexCoord2f( 1.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
+  /* Bottom Left Of The Texture and Quad */
+  glTexCoord2f( 1.0f, 0.0f ); glVertex3f( -1.0f,  1.0f,  1.0f );
+  /* Bottom Right Of The Texture and Quad */
+  glTexCoord2f( 0.0f, 0.0f ); glVertex3f(  1.0f,  1.0f,  1.0f );
+  /* Top Right Of The Texture and Quad */
+  glTexCoord2f( 0.0f, 1.0f ); glVertex3f(  1.0f,  1.0f, -1.0f );
 
-    glNormal3f(0.0f, -1.0f, 0.0f);
-    /* Bottom Face */
-    /* Top Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
-    /* Top Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f, -1.0f, -1.0f );
-    /* Bottom Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f, -1.0f,  1.0f );
-    /* Bottom Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f,  1.0f );
+  /* Bottom Face */
+  /* Top Right Of The Texture and Quad */
+  glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
+  /* Top Left Of The Texture and Quad */
+  glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f, -1.0f, -1.0f );
+  /* Bottom Left Of The Texture and Quad */
+  glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f, -1.0f,  1.0f );
+  /* Bottom Right Of The Texture and Quad */
+  glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f,  1.0f );
 
-    glNormal3f(1.0f, 0.0f, 0.0f);
-    /* Right face */
-    /* Bottom Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( 1.0f, -1.0f, -1.0f );
-    /* Top Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( 1.0f,  1.0f, -1.0f );
-    /* Top Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 1.0f ); glVertex3f( 1.0f,  1.0f,  1.0f );
-    /* Bottom Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 0.0f ); glVertex3f( 1.0f, -1.0f,  1.0f );
+  /* Right face */
+  /* Bottom Right Of The Texture and Quad */
+  glTexCoord2f( 0.0f, 0.0f ); glVertex3f( 1.0f, -1.0f, -1.0f );
+  /* Top Right Of The Texture and Quad */
+  glTexCoord2f( 0.0f, 1.0f ); glVertex3f( 1.0f,  1.0f, -1.0f );
+  /* Top Left Of The Texture and Quad */
+  glTexCoord2f( 1.0f, 1.0f ); glVertex3f( 1.0f,  1.0f,  1.0f );
+  /* Bottom Left Of The Texture and Quad */
+  glTexCoord2f( 1.0f, 0.0f ); glVertex3f( 1.0f, -1.0f,  1.0f );
 
-    glNormal3f(-1.0f, 0.0f, 0.0f);
-    /* Left Face */
-    /* Bottom Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
-    /* Bottom Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f,  1.0f );
-    /* Top Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f,  1.0f,  1.0f );
-    /* Top Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
-	glEnd();
+  /* Left Face */
+  /* Bottom Left Of The Texture and Quad */
+  glTexCoord2f( 1.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
+  /* Bottom Right Of The Texture and Quad */
+  glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f,  1.0f );
+  /* Top Right Of The Texture and Quad */
+  glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f,  1.0f,  1.0f );
+  /* Top Left Of The Texture and Quad */
+  glTexCoord2f( 1.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
+  glEnd();
 
   xrot += 0.3f;
   yrot += 0.2f;
@@ -321,31 +294,16 @@ int loadGLTextures()
 {
   int status = 0;
   SDL_Surface* TextureImage[1];
-  if((TextureImage[0] = SDL_LoadBMP("data/crate.bmp")))
+  if((TextureImage[0] = SDL_LoadBMP("data/nehe.bmp")))
   {
     status = 1;
-    glGenTextures(3, &texture[0]);
-    
+    glGenTextures(1, &texture[0]);
     glBindTexture(GL_TEXTURE_2D, texture[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage[0]->w,
-                 TextureImage[0]->h, 0, GL_BGR,
-                 GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glBindTexture(GL_TEXTURE_2D, texture[1]);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage[0]->w,
                  TextureImage[0]->h, 0, GL_BGR,
                  GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glBindTexture(GL_TEXTURE_2D, texture[2]);
-    gluBuild2DMipmaps(GL_TEXTURE_2D, 3, TextureImage[0]->w,
-                 TextureImage[0]->h, GL_BGR,
-                 GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
   }
   if(TextureImage[0]){
     SDL_FreeSurface(TextureImage[0]);

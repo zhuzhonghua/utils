@@ -15,6 +15,8 @@ const int SCREEN_HEIGHT = 480;
 const int width = 640;
 const int height = 480;
 
+bool blend;
+
 float xrot;
 float yrot;
 float zrot;
@@ -29,7 +31,10 @@ GLfloat LightDiffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};
 GLfloat LightPosition[] = {0.0f, 0.0f, 2.0f, 1.0f};
 
 GLuint filter=0;
-bool lp=false;
+GLuint fogMode[]={GL_EXP,GL_EXP2,GL_LINEAR};
+GLuint fogfilter=0;
+GLfloat fogColor[4]={0.5f, 0.5f, 0.5f, 1.0f};
+
 //Starts up SDL, creates window, and initializes OpenGL
 bool init();
 GLuint texture[3];
@@ -163,7 +168,9 @@ bool initGL()
   glEnable(GL_TEXTURE_2D);
 
   glShadeModel(GL_SMOOTH);
-  glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
+  //glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
+  glClearColor(0.5f,0.5f,0.5f,1.0f);
+  
   glClearDepth(1.0f);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
@@ -181,6 +188,17 @@ bool initGL()
   glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);
   glLightfv(GL_LIGHT1, GL_POSITION, LightPosition);
   glEnable(GL_LIGHT1);
+
+  glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+  glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+
+  glFogi(GL_FOG_MODE,fogMode[fogfilter]);
+  glFogfv(GL_FOG_COLOR, fogColor);
+  glFogf(GL_FOG_DENSITY, 0.35f);
+  glHint(GL_FOG_HINT, GL_DONT_CARE);
+  glFogf(GL_FOG_START, 1.0f);
+  glFogf(GL_FOG_END, 5.0f);
+  glEnable(GL_FOG);
   
 	return success;
 }
@@ -192,15 +210,24 @@ void handleKeys( unsigned char key, int x, int y )
 	{
 		gRenderQuad = !gRenderQuad;
 	}
-    else if(key == 'l'){
-      lp = !lp;
-      if(!lp){
-        glDisable(GL_LIGHTING);
-      }
-      else{
-        glEnable(GL_LIGHTING);
-      }
+  else if(key == 'g'){
+    fogfilter+=1;
+    if(fogfilter>2){
+      fogfilter=0;
     }
+    glFogi(GL_FOG_MODE, fogMode[fogfilter]);
+  }
+  else if(key == 'b'){
+    blend = !blend;
+    if(blend){
+      glEnable(GL_BLEND);
+      glDisable(GL_DEPTH_TEST);
+    }
+    else{
+      glDisable(GL_BLEND);
+      glEnable(GL_DEPTH_TEST);
+    }
+  }
   else if(key == '+')
   {
     depth = depth + 1.0f;

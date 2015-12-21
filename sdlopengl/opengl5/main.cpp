@@ -15,12 +15,6 @@ const int SCREEN_HEIGHT = 480;
 const int width = 640;
 const int height = 480;
 
-float xrot;
-float yrot;
-float zrot;
-
-GLuint texture[1];
-
 float rtri;
 float rquad;
 
@@ -29,7 +23,6 @@ bool init();
 
 //Initializes matrices and clear color
 bool initGL();
-bool resizeWindow();
 
 //Input handler
 void handleKeys( unsigned char key, int x, int y );
@@ -42,8 +35,6 @@ void render();
 
 //Frees media and shuts down SDL
 void close();
-
-int loadGLTextures();
 
 //The window we'll be rendering to
 SDL_Window* gWindow = NULL;
@@ -73,12 +64,7 @@ bool init()
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1 );
 
 		//Create window
-		gWindow = SDL_CreateWindow( "SDL Tutorial",
-                                SDL_WINDOWPOS_UNDEFINED,
-                                SDL_WINDOWPOS_UNDEFINED,
-                                SCREEN_WIDTH,
-                                SCREEN_HEIGHT,
-                                SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
+		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
 		if( gWindow == NULL )
 		{
 			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -107,10 +93,6 @@ bool init()
 					printf( "Unable to initialize OpenGL!\n" );
 					success = false;
 				}
-        if( !resizeWindow() ){
-          printf( "Unable to resizeWindow!\n" );
-					success = false;
-        }
 			}
 		}
 	}
@@ -118,15 +100,23 @@ bool init()
 	return success;
 }
 
-bool resizeWindow()
+bool initGL()
 {
-  bool success = true;
+	bool success = true;
 	GLenum error = GL_NO_ERROR;
-  
+
   glViewport(0, 0, width, height);
 	//Initialize Projection Matrix
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
+	
+	//Check for error
+	error = glGetError();
+	if( error != GL_NO_ERROR )
+	{
+		printf( "Error initializing OpenGL! %s\n", gluErrorString( error ) );
+		success = false;
+	}
 
   gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
   
@@ -142,26 +132,9 @@ bool resizeWindow()
 		success = false;
 	}
 	
-  return success;
-}
-bool initGL()
-{
-	bool success = true;
-	GLenum error = GL_NO_ERROR;
-
-  if(!loadGLTextures()){
-    return false;
-  }
-
-  glEnable(GL_TEXTURE_2D);
-
-  glShadeModel(GL_SMOOTH);
-  glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
-  glClearDepth(1.0f);
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LEQUAL);
-
-  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	//Initialize clear color
+	glClearColor( 0.f, 0.f, 0.f, 1.f );
+	
 	//Check for error
 	error = glGetError();
 	if( error != GL_NO_ERROR )
@@ -169,7 +142,7 @@ bool initGL()
 		printf( "Error initializing OpenGL! %s\n", gluErrorString( error ) );
 		success = false;
 	}
-  
+	
 	return success;
 }
 
@@ -202,82 +175,109 @@ void update()
 
 void render()
 {
-	//Clear color buffer
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  //Clear color buffer
+  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  glLoadIdentity();
   
-	glLoadIdentity();
-	glTranslatef(0.0f, 0.0f,-5.0f);
-  
-  glRotatef(xrot, 1.0f, 0.0f, 0.0f);
-  glRotatef(yrot, 0.0f, 1.0f, 0.0f);
-  glRotatef(zrot, 0.0f, 0.0f, 1.0f);
+  glTranslatef(-1.5f, 0.0f, -6.0f);
+  glRotatef(rtri, 0.0f, 1.0f, 0.0f);
+  glBegin(GL_TRIANGLES);
+  {
+    glColor3f(1.0f,0.0f,0.0f);
+    glVertex3f(0.0f, 1.0f, depth);
 
-  glBindTexture(GL_TEXTURE_2D, texture[0]);
-  
-	glBegin(GL_QUADS);
-    /* Bottom Left Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f, -1.0f, 1.0f );
-    /* Bottom Right Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f, -1.0f, 1.0f );
-    /* Top Right Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f,  1.0f, 1.0f );
-    /* Top Left Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f,  1.0f, 1.0f );
+    glColor3f(0.0f,1.0f,0.0f);
+    glVertex3f(-1.0f, -1.0f, depth+1.0f);
 
-    /* Back Face */
-    /* Bottom Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
-    /* Top Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
-    /* Top Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f,  1.0f, -1.0f );
-    /* Bottom Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f, -1.0f, -1.0f );
+    glColor3f(0.0f,0.0f,1.0f);
+    glVertex3f(1.0f, -1.0f, depth+1.0f);
+  }
+  {
+    glColor3f(1.0f,0.0f,0.0f);
+    glVertex3f(0.0f, 1.0f, depth);
 
-    /* Top Face */
-    /* Top Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
-    /* Bottom Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 0.0f ); glVertex3f( -1.0f,  1.0f,  1.0f );
-    /* Bottom Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 0.0f ); glVertex3f(  1.0f,  1.0f,  1.0f );
-    /* Top Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 1.0f ); glVertex3f(  1.0f,  1.0f, -1.0f );
+    glColor3f(0.0f,0.0f,1.0f);
+    glVertex3f(1.0f, -1.0f, depth+1.0f);
 
-    /* Bottom Face */
-    /* Top Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
-    /* Top Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f, -1.0f, -1.0f );
-    /* Bottom Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f, -1.0f,  1.0f );
-    /* Bottom Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f,  1.0f );
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex3f(1.0f, -1.0f, depth-1.0f);
+  }
+  {
+    glColor3f(1.0f,0.0f,0.0f);
+    glVertex3f(0.0f, 1.0f, depth);
 
-    /* Right face */
-    /* Bottom Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( 1.0f, -1.0f, -1.0f );
-    /* Top Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( 1.0f,  1.0f, -1.0f );
-    /* Top Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 1.0f ); glVertex3f( 1.0f,  1.0f,  1.0f );
-    /* Bottom Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 0.0f ); glVertex3f( 1.0f, -1.0f,  1.0f );
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex3f(1.0f, -1.0f, depth-1.0f);
 
-    /* Left Face */
-    /* Bottom Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
-    /* Bottom Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f,  1.0f );
-    /* Top Right Of The Texture and Quad */
-    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f,  1.0f,  1.0f );
-    /* Top Left Of The Texture and Quad */
-    glTexCoord2f( 1.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
-	glEnd();
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glVertex3f(-1.0f, -1.0f, depth-1.0f);
+  }
+  {
+    glColor3f(1.0f,0.0f,0.0f);
+    glVertex3f(0.0f, 1.0f, depth);
 
-  xrot += 0.3f;
-  yrot += 0.2f;
-  zrot += 0.4f;
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glVertex3f(-1.0f, -1.0f, depth-1.0f);
+
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex3f(-1.0f, -1.0f, depth+1.0f);
+  }
+  glEnd();
+
+  glLoadIdentity();
+  glTranslatef(1.5f, 0.0f, -7.0f);
+  glRotatef(rquad, 1.0f, 1.0f, 1.0f);
+  glBegin(GL_QUADS);
+  {
+    glColor3f(0.0f,1.0f,0.0f);
+    glVertex3f( 1.0f, 1.0f, depth-1.0f);
+    glVertex3f(-1.0f, 1.0f, depth-1.0f);
+    glVertex3f(-1.0f, 1.0f, depth+1.0f);
+    glVertex3f( 1.0f, 1.0f, depth+1.0f);
+  }
+  glColor3f(1.0f,0.5f,0.0f);
+  glVertex3f( 1.0f,-1.0f, depth+1.0f);
+  glVertex3f(-1.0f,-1.0f, depth+1.0f);
+  glVertex3f(-1.0f,-1.0f, depth-1.0f);
+  glVertex3f( 1.0f,-1.0f, depth-1.0f);
+
+  glColor3f(1.0f,0.0f,0.0f);
+  glVertex3f( 1.0f, 1.0f, depth+1.0f);
+  glVertex3f(-1.0f, 1.0f, depth+1.0f);
+  glVertex3f(-1.0f,-1.0f, depth+1.0f);
+  glVertex3f( 1.0f,-1.0f, depth+1.0f);
+
+  glColor3f(1.0f,1.0f,0.0f);
+  glVertex3f( 1.0f,-1.0f, depth-1.0f);
+  glVertex3f(-1.0f,-1.0f, depth-1.0f);
+  glVertex3f(-1.0f, 1.0f, depth-1.0f);
+  glVertex3f( 1.0f, 1.0f, depth-1.0f);
+
+  glColor3f(0.0f,0.0f,1.0f);
+  glVertex3f(-1.0f, 1.0f, depth+1.0f);
+  glVertex3f(-1.0f, 1.0f, depth-1.0f);
+  glVertex3f(-1.0f,-1.0f, depth-1.0f);
+  glVertex3f(-1.0f,-1.0f, depth+1.0f);
+
+  glColor3f(1.0f,0.0f,1.0f);
+  glVertex3f( 1.0f, 1.0f, depth-1.0f);
+  glVertex3f( 1.0f, 1.0f, depth+1.0f);
+  glVertex3f( 1.0f,-1.0f, depth+1.0f);
+  glVertex3f( 1.0f,-1.0f, depth-1.0f);
+  glEnd();
+
+  rtri += 0.2f;
+  rquad += 0.2f;
+	//Render quad
+	//if( gRenderQuad )
+	//{
+	//	glBegin( GL_QUADS );
+	//		glVertex2f( -0.5f, -0.5f );
+	//		glVertex2f( 0.5f, -0.5f );
+	//		glVertex2f( 0.5f, 0.5f );
+	//		glVertex2f( -0.5f, 0.5f );
+	//	glEnd();
+	//}
 }
 
 void close()
@@ -288,27 +288,6 @@ void close()
 
 	//Quit SDL subsystems
 	SDL_Quit();
-}
-
-int loadGLTextures()
-{
-  int status = 0;
-  SDL_Surface* TextureImage[1];
-  if((TextureImage[0] = SDL_LoadBMP("data/nehe.bmp")))
-  {
-    status = 1;
-    glGenTextures(1, &texture[0]);
-    glBindTexture(GL_TEXTURE_2D, texture[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage[0]->w,
-                 TextureImage[0]->h, 0, GL_BGR,
-                 GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  }
-  if(TextureImage[0]){
-    SDL_FreeSurface(TextureImage[0]);
-  }
-  return status;
 }
 
 int main( int argc, char* args[] )

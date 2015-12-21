@@ -17,25 +17,6 @@ const int height = 480;
 
 bool blend;
 
-bool twinkle;
-const int num=50;
-
-struct star
-{
-  int r, g, b;
-  float dist;
-  float angle;
-};
-
-star stars[num];
-
-float zoom = -15.0f;
-float tilt = 90.0f;
-float spin;
-
-GLuint loop;
-GLuint texture[1];
-
 float xrot;
 float yrot;
 float zrot;
@@ -53,7 +34,7 @@ GLuint filter=0;
 
 //Starts up SDL, creates window, and initializes OpenGL
 bool init();
-
+GLuint texture[3];
 
 //Initializes matrices and clear color
 bool initGL();
@@ -182,11 +163,12 @@ bool initGL()
   }
 
   glEnable(GL_TEXTURE_2D);
+
   glShadeModel(GL_SMOOTH);
   glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
   glClearDepth(1.0f);
-  //glEnable(GL_DEPTH_TEST);
-  //glDepthFunc(GL_LEQUAL);
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL);
 
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	//Check for error
@@ -197,21 +179,13 @@ bool initGL()
 		success = false;
 	}
 
-  //glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);
-  //glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);
-  //glLightfv(GL_LIGHT1, GL_POSITION, LightPosition);
-  //glEnable(GL_LIGHT1);
-  //
-  //glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
-  glBlendFunc(GL_SRC_ALPHA,GL_ONE);
-  glEnable(GL_BLEND);
+  glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);
+  glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);
+  glLightfv(GL_LIGHT1, GL_POSITION, LightPosition);
+  glEnable(GL_LIGHT1);
 
-  for(int i = 0; i < num; i++){
-    stars[i].dist = (float(i)/num)*5.0f;
-    stars[i].r = rand()%256;
-    stars[i].g = rand()%256;
-    stars[i].b = rand()%256;
-  }
+  glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+  glBlendFunc(GL_SRC_ALPHA,GL_ONE);
   
 	return success;
 }
@@ -223,9 +197,6 @@ void handleKeys( unsigned char key, int x, int y )
 	{
 		gRenderQuad = !gRenderQuad;
 	}
-  else if(key == 't'){
-    twinkle = !twinkle;
-  }
   else if(key == 'b'){
     blend = !blend;
     if(blend){
@@ -239,10 +210,10 @@ void handleKeys( unsigned char key, int x, int y )
   }
   else if(key == '+')
   {
-    zoom += 1.0f;
+    depth = depth + 1.0f;
   }
   else if(key == '-'){
-    zoom -= 1.0f;
+    depth = depth - 1.0f;
   }
   else if(key == ']'){
     rtri += 10.0f;
@@ -270,48 +241,86 @@ void render()
 {
 	//Clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-  glBindTexture(GL_TEXTURE_2D, texture[0]);
+  
+	glLoadIdentity();
+	glTranslatef(0.0f, 0.0f,depth);
+  
+  glRotatef(xrot, 1.0f, 0.0f, 0.0f);
+  glRotatef(yrot, 0.0f, 1.0f, 0.0f);
+  //glRotatef(zrot, 0.0f, 0.0f, 1.0f);
 
-  for(int loop=0; loop<num; loop++){
-    glLoadIdentity();
-    glTranslatef(0.0f, 0.0f, zoom);
-    glRotatef(tilt, 1.0f, 0.0f, 0.0f);
-    
-    glRotatef(stars[loop].angle, 0.0f, 1.0f, 0.0f);
-    glTranslatef(stars[loop].dist, 0.0f, 0.0f);
+  glBindTexture(GL_TEXTURE_2D, texture[filter]);
+  
+	glBegin(GL_QUADS);
+    glNormal3f(0.0f, 0.0f, 1.0f);
+    /* Bottom Left Of The Texture and Quad */
+    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f, -1.0f, 1.0f );
+    /* Bottom Right Of The Texture and Quad */
+    glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f, -1.0f, 1.0f );
+    /* Top Right Of The Texture and Quad */
+    glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f,  1.0f, 1.0f );
+    /* Top Left Of The Texture and Quad */
+    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f,  1.0f, 1.0f );
 
-    glRotatef(-stars[loop].angle, 0.0f, 1.0f, 0.0f);
-    glRotatef(-tilt, 1.0f, 0.0f, 0.0f);
+    glNormal3f(0.0f, 0.0f, -1.0f);
+    /* Back Face */
+    /* Bottom Right Of The Texture and Quad */
+    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
+    /* Top Right Of The Texture and Quad */
+    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
+    /* Top Left Of The Texture and Quad */
+    glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f,  1.0f, -1.0f );
+    /* Bottom Left Of The Texture and Quad */
+    glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f, -1.0f, -1.0f );
 
-    if(twinkle){
-      glColor4ub(stars[num-loop-1].r, stars[num-loop-1].g,stars[num-loop-1].b,255);
-      glBegin(GL_QUADS);
-        glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f, -1.0f, 0.0f );
-        glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f, -1.0f, 0.0f );
-        glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f,  1.0f, 0.0f );
-        glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f,  1.0f, 0.0f );       
-      glEnd();
-    }
-    glRotatef(spin, 0.0f, 0.0f, 1.0f);
-    glColor4ub(stars[loop].r,stars[loop].g,stars[loop].b,255);
-    glBegin(GL_QUADS);
-      glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f, -1.0f, 0.0f );
-      glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f, -1.0f, 0.0f );
-      glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f,  1.0f, 0.0f );
-      glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f,  1.0f, 0.0f );       
-    glEnd();
+    glNormal3f(0.0f, 1.0f, 0.0f);
+    /* Top Face */
+    /* Top Left Of The Texture and Quad */
+    glTexCoord2f( 1.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
+    /* Bottom Left Of The Texture and Quad */
+    glTexCoord2f( 1.0f, 0.0f ); glVertex3f( -1.0f,  1.0f,  1.0f );
+    /* Bottom Right Of The Texture and Quad */
+    glTexCoord2f( 0.0f, 0.0f ); glVertex3f(  1.0f,  1.0f,  1.0f );
+    /* Top Right Of The Texture and Quad */
+    glTexCoord2f( 0.0f, 1.0f ); glVertex3f(  1.0f,  1.0f, -1.0f );
 
-    spin+=0.01f;
-    stars[loop].angle+=float(loop)/num;
-    stars[loop].dist-=0.01f;
+    glNormal3f(0.0f, -1.0f, 0.0f);
+    /* Bottom Face */
+    /* Top Right Of The Texture and Quad */
+    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
+    /* Top Left Of The Texture and Quad */
+    glTexCoord2f( 1.0f, 1.0f ); glVertex3f(  1.0f, -1.0f, -1.0f );
+    /* Bottom Left Of The Texture and Quad */
+    glTexCoord2f( 1.0f, 0.0f ); glVertex3f(  1.0f, -1.0f,  1.0f );
+    /* Bottom Right Of The Texture and Quad */
+    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f,  1.0f );
 
-    if(stars[loop].dist <0.0f){
-      stars[loop].dist+=5.0f;
-      stars[loop].r = rand()%256;
-      stars[loop].g = rand()%256;
-      stars[loop].b = rand()%256;
-    }
-  }
+    glNormal3f(1.0f, 0.0f, 0.0f);
+    /* Right face */
+    /* Bottom Right Of The Texture and Quad */
+    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( 1.0f, -1.0f, -1.0f );
+    /* Top Right Of The Texture and Quad */
+    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( 1.0f,  1.0f, -1.0f );
+    /* Top Left Of The Texture and Quad */
+    glTexCoord2f( 1.0f, 1.0f ); glVertex3f( 1.0f,  1.0f,  1.0f );
+    /* Bottom Left Of The Texture and Quad */
+    glTexCoord2f( 1.0f, 0.0f ); glVertex3f( 1.0f, -1.0f,  1.0f );
+
+    glNormal3f(-1.0f, 0.0f, 0.0f);
+    /* Left Face */
+    /* Bottom Left Of The Texture and Quad */
+    glTexCoord2f( 1.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, -1.0f );
+    /* Bottom Right Of The Texture and Quad */
+    glTexCoord2f( 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f,  1.0f );
+    /* Top Right Of The Texture and Quad */
+    glTexCoord2f( 0.0f, 1.0f ); glVertex3f( -1.0f,  1.0f,  1.0f );
+    /* Top Left Of The Texture and Quad */
+    glTexCoord2f( 1.0f, 1.0f ); glVertex3f( -1.0f,  1.0f, -1.0f );
+	glEnd();
+
+  xrot += 0.3f;
+  yrot += 0.2f;
+  zrot += 0.4f;
 }
 
 void close()
@@ -328,10 +337,10 @@ int loadGLTextures()
 {
   int status = 0;
   SDL_Surface* TextureImage[1];
-  if((TextureImage[0] = SDL_LoadBMP("data/star.bmp")))
+  if((TextureImage[0] = SDL_LoadBMP("data/glass.bmp")))
   {
     status = 1;
-    glGenTextures(1, &texture[0]);
+    glGenTextures(3, &texture[0]);
     
     glBindTexture(GL_TEXTURE_2D, texture[0]);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage[0]->w,
@@ -339,6 +348,20 @@ int loadGLTextures()
                  GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, texture[1]);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage[0]->w,
+                 TextureImage[0]->h, 0, GL_BGR,
+                 GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindTexture(GL_TEXTURE_2D, texture[2]);
+    gluBuild2DMipmaps(GL_TEXTURE_2D, 3, TextureImage[0]->w,
+                 TextureImage[0]->h, GL_BGR,
+                 GL_UNSIGNED_BYTE, TextureImage[0]->pixels);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
   }
   if(TextureImage[0]){
     SDL_FreeSurface(TextureImage[0]);
